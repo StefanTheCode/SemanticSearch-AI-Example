@@ -1,9 +1,10 @@
 ﻿using System.Numerics.Tensors;
 using Microsoft.Extensions.AI;
+using OllamaSharp;
 
 // Initialize the embedding generator with the specified model and endpoint.
 IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator =
-            new OllamaEmbeddingGenerator(new Uri("http://127.0.0.1:11434"), modelId: "all-minilm");
+            new OllamaApiClient(new Uri("http://127.0.0.1:11434"), "all-minilm");
 
 // Define blog post titles as candidates for similarity search.
 var blogPostTitles = new[]
