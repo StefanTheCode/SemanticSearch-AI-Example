@@ -1,8 +1,10 @@
-﻿using System.Numerics.Tensors;
-using Microsoft.Extensions.AI;
-using OllamaSharp;
+﻿using System.Numerics.Tensors; // Provides TensorPrimitives for efficient mathematical operations like cosine similarity
+using Microsoft.Extensions.AI;      // Unified AI abstractions for .NET (IEmbeddingGenerator, Embedding<T>, etc.)
+using OllamaSharp;                  // Ollama client that implements IEmbeddingGenerator for local model inference
 
-// Initialize the embedding generator with the specified model and endpoint.
+// Initialize the embedding generator using OllamaSharp's OllamaApiClient.
+// It connects to a locally running Ollama instance and uses the "all-minilm" model
+// to convert text into numerical vector representations (embeddings).
 IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator =
             new OllamaApiClient(new Uri("http://127.0.0.1:11434"), "all-minilm");
 
@@ -79,6 +81,10 @@ var blogPostTitles = new[]
 };
 
 Console.WriteLine("Generating embeddings for blog post titles...");
+
+// Generate embeddings for all blog post titles in a single batch call.
+// GenerateAndZipAsync returns a list of (Value, Embedding) pairs,
+// linking each original title with its corresponding embedding vector.
 var candidateEmbeddings = await embeddingGenerator.GenerateAndZipAsync(blogPostTitles);
 Console.WriteLine("Embeddings generated successfully.");
 
@@ -92,10 +98,12 @@ while (true)
         break;
     }
 
-    // Generate embedding for the user's input.
+    // Generate a single embedding vector for the user's search query.
     var userEmbedding = await embeddingGenerator.GenerateAsync(userInput);
 
-    // Compute cosine similarities and get the top three matches.
+    // Compare the user's query embedding against every blog post embedding
+    // using cosine similarity — a value between -1 and 1 where 1 means identical direction.
+    // TensorPrimitives.CosineSimilarity uses SIMD-accelerated operations for performance.
     var topMatches = candidateEmbeddings
         .Select(candidate => new
         {
@@ -103,7 +111,7 @@ while (true)
             Similarity = TensorPrimitives.CosineSimilarity(candidate.Embedding.Vector.Span, userEmbedding.Vector.Span)
         })
         .OrderByDescending(match => match.Similarity)
-        .Take(3);
+        .Take(3); // Return only the top 3 most semantically similar results
 
     Console.WriteLine("\nTop matching blog post titles:");
     foreach (var match in topMatches)
