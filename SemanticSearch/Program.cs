@@ -93,7 +93,7 @@ while (true)
     }
 
     // Generate embedding for the user's input.
-    var userEmbedding = await embeddingGenerator.GenerateEmbeddingAsync(userInput);
+    var userEmbedding = await embeddingGenerator.GenerateAsync(userInput);
 
     // Compute cosine similarities and get the top three matches.
     var topMatches = candidateEmbeddings
